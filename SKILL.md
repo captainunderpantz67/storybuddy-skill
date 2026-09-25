@@ -1,9 +1,9 @@
 ---
-name: storyboard-pipeline
-description: Turn a live talk-through or a concepting-call transcript into a client-presentable, dark-themed Shot Board — a precise shot-by-shot breakdown with real AI-generated video for every shot. Use when asked to build a storyboard, previz a commercial/spot from a conversation, "turn this into shots," or produce a shot-by-shot dashboard with generated video. Also triggers on "shot board," "animate this scene," "storyboard skill."
+name: storybuddy
+description: Turn a live talk-through or a concepting-call transcript into a client-presentable, dark-themed Shot Board — a precise shot-by-shot breakdown with real AI-generated video for every shot. Use when asked to build a storyboard, previz a commercial/spot from a conversation, "turn this into shots," or produce a shot-by-shot dashboard with generated video. Also triggers on "storybuddy," "shot board," "animate this scene."
 ---
 
-# Storyboard Pipeline
+# StoryBuddy
 
 Built the first time on the Sacramento spot session, 2026-09-25. That session is
 the source of every gotcha below — read them, they cost real time to learn once.
