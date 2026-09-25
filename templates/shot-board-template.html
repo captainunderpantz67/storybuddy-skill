@@ -1,0 +1,459 @@
+<title>Shot Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0a0c0f;
+    --bg-raised:#12151b;
+    --surface:#171b21;
+    --surface-2:#1f242c;
+    --border:#2a2f38;
+    --border-soft:#20242c;
+    --text:#e7e9ec;
+    --text-dim:#8d94a1;
+    --text-faint:#5b616c;
+    --accent:#e8862a;
+    --accent-soft:rgba(232,134,42,0.14);
+    --accent-cool:#3fa9a4;
+    --accent-cool-soft:rgba(63,169,164,0.14);
+    --radius:10px;
+    background:var(--bg);
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
+
+  h1,h2,.display{ font-family:'Bebas Neue',system-ui,sans-serif; letter-spacing:0.02em; }
+
+  /* ---------- header ---------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 6px;
+  }
+  h1.project{
+    font-size:clamp(30px,5vw,46px);
+    margin:0 0 4px; color:var(--text); text-wrap:balance;
+  }
+  .subline{ color:var(--text-dim); font-size:14px; margin:0 0 20px; }
+
+  .banner{
+    display:flex; gap:10px; align-items:flex-start;
+    background:var(--accent-soft); border:1px solid rgba(232,134,42,0.35);
+    border-radius:var(--radius); padding:12px 14px; margin-bottom:24px;
+    font-size:13px; line-height:1.5; color:var(--text);
+  }
+  .banner b{ color:var(--accent); font-family:'IBM Plex Mono',monospace; letter-spacing:0.03em; }
+
+  /* ---------- pipeline tracker ---------- */
+  .pipeline{
+    display:flex; gap:0; margin-bottom:26px; overflow-x:auto;
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+  }
+  .stage{
+    flex:1 1 0; min-width:130px; padding:12px 14px; position:relative;
+    border-right:1px solid var(--border); cursor:pointer;
+    background:none; text-align:left; font-family:inherit; color:inherit;
+    border-top:none; border-left:none; border-bottom:none;
+    transition:background 0.12s ease;
+  }
+  .stage:last-child{ border-right:none; }
+  .stage:hover{ background:var(--surface-2); }
+  .stage .n{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-faint);
+  }
+  .stage .label{ font-size:13px; font-weight:500; margin-top:3px; }
+  .stage.done .n::before{ content:"✓ "; color:var(--accent-cool); }
+  .stage.pending .label{ color:var(--text-faint); }
+  .stage.selected{ background:var(--accent-soft); box-shadow:inset 0 -2px 0 var(--accent); }
+  .stage.selected .label{ color:var(--accent); }
+  .stage.selected .n{ color:var(--accent); }
+
+  .panel{ animation:fade 0.15s ease; }
+  @keyframes fade{ from{ opacity:0.4; } to{ opacity:1; } }
+  .panel-head{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .panel-head h2{ font-size:24px; margin:0; }
+  .status-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px;
+    border-radius:999px; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .status-pill.ok{ background:rgba(63,169,164,0.15); color:var(--accent-cool); }
+  .status-pill.locked{ background:var(--surface-2); color:var(--text-faint); border:1px solid var(--border); }
+  .status-pill.active{ background:var(--accent-soft); color:var(--accent); }
+  .lockcard{
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-raised);
+    padding:22px; display:flex; flex-direction:column; gap:14px;
+  }
+  .lockcard p{ color:var(--text-dim); font-size:13.5px; line-height:1.6; margin:0; max-width:60ch; }
+  .lookbrief{
+    border-left:3px solid var(--accent-cool); padding:2px 0 2px 14px;
+    font-size:13.5px; line-height:1.65; color:var(--text); max-width:65ch;
+  }
+  .lookbrief b{ color:var(--accent-cool); }
+  .lockbtn{
+    align-self:flex-start; font-family:'IBM Plex Mono',monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.06em; padding:10px 18px;
+    border-radius:7px; border:1px solid var(--border); background:transparent;
+    color:var(--text-faint); cursor:not-allowed;
+  }
+  .refgrid{ display:flex; gap:14px; flex-wrap:wrap; }
+  .reftile{
+    width:130px; display:flex; flex-direction:column; gap:6px;
+  }
+  .reftile .sq{
+    aspect-ratio:1; border-radius:8px; border:1px dashed var(--border);
+    background:repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--bg-raised) 10px 20px);
+    display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:18px;
+  }
+  .reftile .cap{ font-size:11px; color:var(--text-dim); text-align:center; }
+  .transcript-box{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.7; color:var(--text-dim);
+    background:var(--bg-raised); border:1px solid var(--border); border-radius:8px;
+    padding:16px; white-space:pre-wrap; margin:14px 0;
+  }
+  .transcript-box .who{ color:var(--accent-cool); }
+  textarea.paste{
+    width:100%; min-height:90px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:8px; color:var(--text-faint); font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px; padding:12px; resize:vertical;
+  }
+  .progressrow{ display:flex; align-items:center; gap:12px; margin:16px 0; }
+  .progresstrack{ flex:1; height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
+  .progressfill{ height:100%; width:0%; background:var(--accent); }
+  .queue{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .qrow{
+    display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--text-faint); padding:8px 12px; background:var(--bg-raised);
+    border:1px solid var(--border); border-radius:6px;
+  }
+
+  /* ---------- stat tiles ---------- */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--border); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; margin-bottom:32px;
+  }
+  .stat{ background:var(--surface); padding:16px 18px; }
+  .stat .v{
+    font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500;
+    font-variant-numeric:tabular-nums; color:var(--text);
+  }
+  .stat .k{ font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
+
+  /* ---------- scene sections ---------- */
+  details.scene{
+    border:1px solid var(--border); border-radius:var(--radius);
+    background:var(--bg-raised); margin-bottom:16px; overflow:hidden;
+  }
+  details.scene[open] summary{ border-bottom:1px solid var(--border); }
+  summary{
+    list-style:none; cursor:pointer; padding:14px 18px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:var(--surface);
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary .chev{
+    font-family:'IBM Plex Mono',monospace; color:var(--text-faint); font-size:12px;
+    transition:transform 0.15s ease; margin-left:auto;
+  }
+  details[open] summary .chev{ transform:rotate(90deg); }
+  .scene-num{
+    font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent);
+    min-width:52px;
+  }
+  .scene-title{ flex:1 1 260px; }
+  .scene-title .slug{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .scene-title .name{ font-size:16px; font-weight:500; margin-top:2px; }
+  .scene-meta{ display:flex; gap:8px; }
+  .pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:4px 9px;
+    border-radius:999px; border:1px solid var(--border); color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .pill.heavy{ border-color:rgba(232,134,42,0.4); color:var(--accent); }
+
+  .strip{
+    display:flex; gap:14px; padding:18px; overflow-x:auto;
+    background:repeating-linear-gradient(
+      90deg, var(--bg-raised) 0 22px, var(--border-soft) 22px 24px
+    );
+    background-position:0 0, 0 100%;
+    background-size:100% 6px;
+    background-repeat:repeat-x;
+    position:relative;
+  }
+  .strip::before, .strip::after{
+    content:""; position:absolute; left:0; right:0; height:6px;
+    background:repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 16px);
+    opacity:0.6;
+  }
+  .strip::before{ top:0; }
+  .strip::after{ bottom:0; }
+
+  .card{
+    flex:0 0 190px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .frame{
+    aspect-ratio:16/9; background:
+      repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--bg-raised) 10px 20px);
+    border-bottom:1px dashed var(--border);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    overflow:hidden; position:relative;
+  }
+  .frame img, .frame video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .frame .glyph{ font-size:20px; color:var(--text-faint); }
+  .frame .await{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--text-faint);
+  }
+  .frame .gentag{
+    position:absolute; top:6px; left:6px; font-family:'IBM Plex Mono',monospace;
+    font-size:8.5px; letter-spacing:0.08em; text-transform:uppercase;
+    background:rgba(10,12,15,0.72); color:var(--accent-cool); padding:2px 6px; border-radius:4px;
+  }
+  .card-body{ padding:10px 11px 12px; display:flex; flex-direction:column; gap:7px; }
+  .shot-id{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .shot-id .dur{ color:var(--text-dim); font-size:11px; }
+  .shot-id .frames{ color:var(--text-faint); font-size:9.5px; display:block; text-align:right; }
+  .badges{ display:flex; gap:5px; flex-wrap:wrap; }
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 6px;
+    border-radius:4px; letter-spacing:0.03em;
+  }
+  .badge.size{ background:var(--surface-2); color:var(--text-dim); border:1px solid var(--border); }
+  .badge.move{ background:var(--accent-cool-soft); color:var(--accent-cool); }
+  .action{ font-size:12.5px; line-height:1.4; color:var(--text); }
+  .vo{ font-size:11.5px; line-height:1.4; color:var(--accent-cool); font-style:italic; }
+  .genbtn{
+    margin-top:auto; font-family:'IBM Plex Mono',monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.08em; text-align:center;
+    padding:7px; border-radius:6px; border:1px solid var(--border);
+    color:var(--text-faint); background:transparent; cursor:not-allowed;
+  }
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap; font-size:12px; color:var(--text-dim);
+    margin:28px 0 8px; padding-top:18px; border-top:1px solid var(--border);
+  }
+  .legend b{ color:var(--text); }
+  .legend .lg-item{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  @media (max-width:640px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    .stage{ min-width:110px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow" id="eyebrow">Storyboard Pipeline — Checkpoint 1 of 5</p>
+  <h1 class="project" id="project-title">PROJECT NAME — Shot Board</h1>
+  <p class="subline">Structural review layer. Nothing below is generated yet — approve or correct the shot breakdown first, then it locks and generation begins.</p>
+
+  <div class="banner" id="banner">
+    <span>⚠</span>
+    <div><b>SAMPLE SHOT DATA.</b> Replace the <code>scenes</code> array below with the real shot list once the brief is talked through. This banner should always say plainly what's real vs. placeholder — never let generated content look more locked-in than it is.</div>
+  </div>
+
+  <div class="pipeline" id="pipeline"></div>
+  <div class="stats" id="stats"></div>
+
+  <div id="panel-root"></div>
+
+  <div class="legend">
+    <span><b>Reading a card:</b></span>
+    <span class="lg-item"><span class="badge size" style="padding:2px 6px;">MS</span> shot size</span>
+    <span class="lg-item"><span class="badge move" style="padding:2px 6px;">PUSH‑IN</span> camera move</span>
+    <span class="lg-item"><span class="swatch" style="background:var(--accent);"></span> shot number / duration</span>
+    <span class="lg-item"><span class="swatch" style="background:var(--surface-2); border:1px dashed var(--border);"></span> pending frame — fills in place once generated</span>
+  </div>
+</div>
+
+<script>
+const FPS = 24;
+
+// ---- EDIT THIS BLOCK PER PROJECT ----
+const PROJECT_TITLE = "PROJECT NAME — Shot Board";
+const PROJECT_EYEBROW = "Storyboard Pipeline — Checkpoint 1 of 5";
+
+const stages = [
+  { label:"Transcript", state:"done" },
+  { label:"Shot List", state:"current" },
+  { label:"Style Lock", state:"pending" },
+  { label:"Generate", state:"pending" },
+  { label:"Deliver", state:"pending" },
+];
+
+// Each shot: [size, move, duration, action, audio, imgUrl?, videoUrl?]
+// imgUrl/videoUrl are blob URLs from Artifact upload_asset — omit until generated.
+// scene.real:true flags a scene as built from an actual brief, vs. placeholder/sample.
+const scenes = [
+  { num:1, slug:"INT. GARAGE — DAWN", shots:[
+    ["WS","Static",0.9,"Garage door rises, cold blue light cuts across concrete floor."],
+    ["MS","Handheld",0.7,"Hand pulls tailgate strap taut, gear rack rattles."],
+    ["CU","Static",0.6,"Headlamp clicks on — flare across lens."],
+    ["MCU","Push-in",0.8,"Breath fogs in the cold as engine turns over off-frame."],
+    ["INSERT","Static",0.5,"Keys drop into palm, engraved logo tag catches light."],
+  ]},
+];
+// ---- END EDIT BLOCK ----
+
+document.getElementById("eyebrow").textContent = PROJECT_EYEBROW;
+document.getElementById("project-title").textContent = PROJECT_TITLE;
+
+function fmtDur(d){ return (typeof d === "string" ? d : d.toFixed(1)) + "s"; }
+function frames(d){ const n = typeof d === "string" ? parseFloat(d) : d; return Math.round(n*FPS)+"f"; }
+
+const totalShots = scenes.reduce((a,s)=>a+s.shots.length,0);
+const totalSeconds = scenes.reduce((a,s)=>a+s.shots.reduce((b,sh)=>b+(typeof sh[2]==="string"?parseFloat(sh[2]):sh[2]),0),0);
+const avg = totalSeconds/totalShots;
+
+document.getElementById("stats").innerHTML = `
+  <div class="stat"><div class="v">${scenes.length}</div><div class="k">Scenes</div></div>
+  <div class="stat"><div class="v">${totalShots}</div><div class="k">Total Shots</div></div>
+  <div class="stat"><div class="v">${totalSeconds.toFixed(1)}s</div><div class="k">Est. Runtime</div></div>
+  <div class="stat"><div class="v">${avg.toFixed(2)}s</div><div class="k">Avg Shot Length</div></div>
+`;
+
+let selected = 1; // Shot List open by default
+
+function renderPipeline(){
+  document.getElementById("pipeline").innerHTML = stages.map((s,i)=>
+    `<button class="stage ${s.state} ${i===selected?'selected':''}" data-i="${i}">
+       <div class="n">${String(i+1).padStart(2,"0")}</div><div class="label">${s.label}</div>
+     </button>`
+  ).join("");
+  document.querySelectorAll(".stage").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ selected = parseInt(btn.dataset.i,10); renderAll(); });
+  });
+}
+
+function renderTranscriptPanel(){
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Transcript</h2><span class="status-pill locked">Not yet ingested</span></div>
+      <div class="lockcard">
+        <p>Paste the real concepting-call transcript (Zoom/Gemini, or condensed from a live talk-through) here. Claude reads it directly and builds the Shot List panel from it — same process whether it's a recorded transcript or a live conversation condensed after the fact.</p>
+        <textarea class="paste" disabled placeholder="Paste the transcript here — this field activates once the ingestion step is wired up for this project."></textarea>
+      </div>
+    </div>`;
+}
+
+function renderShotListPanel(){
+  return `<div class="panel"><div class="panel-head"><h2>Shot List</h2><span class="status-pill active">Reviewing — checkpoint 1</span></div>${scenes.map(scene => {
+  const dur = scene.shots.reduce((a,sh)=>a+(typeof sh[2]==="string"?parseFloat(sh[2]):sh[2]),0);
+  const cards = scene.shots.map((sh,i)=>{
+    const [size, move, d, action, audio, img, video] = sh;
+    return `
+      <div class="card">
+        <div class="frame">
+          ${video
+            ? `<video src="${video}" autoplay loop muted playsinline></video><span class="gentag">Video</span>`
+            : img
+            ? `<img src="${img}" alt="Generated still — shot ${scene.num}${String.fromCharCode(65+i)}"><span class="gentag">First look</span>`
+            : `<span class="glyph">▭</span><span class="await">Awaiting Generation</span>`}
+        </div>
+        <div class="card-body">
+          <div class="shot-id">
+            <span>${scene.num}${String.fromCharCode(65+i)}</span>
+            <span class="dur">${fmtDur(d)}<span class="frames">${frames(d)}</span></span>
+          </div>
+          <div class="badges">
+            <span class="badge size">${size}</span>
+            <span class="badge move">${move}</span>
+          </div>
+          <div class="action">${action}</div>
+          ${audio ? `<div class="vo">${audio}</div>` : ``}
+          <button class="genbtn" ${img?'':'disabled'} title="${img?'Regenerate this shot':'Locked until style reference is approved'}">${img?'Regenerate ↻':'Generate ↦'}</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <details class="scene" open>
+      <summary>
+        <div class="scene-num">${String(scene.num).padStart(2,"0")}</div>
+        <div class="scene-title">
+          <div class="slug">${scene.slug}</div>
+          <div class="name">${scene.shots.length} shots planned</div>
+        </div>
+        <div class="scene-meta">
+          <span class="pill">${dur.toFixed(1)}s est.</span>
+          <span class="pill ${scene.real?"heavy":""}">${scene.real ? "real" : "sample"}</span>
+        </div>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="strip">${cards}</div>
+    </details>`;
+}).join("")}</div>`;
+}
+
+function renderStyleLockPanel(){
+  const refs = ["Hero Subject","Cast / Product","Environment Palette","Lighting Mood"];
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Style Lock</h2><span class="status-pill locked">Blocked on Shot List approval</span></div>
+      <div class="lockcard">
+        <p>One reference pass generated and approved once. Every one of the ${totalShots} shots then generates against these same references, so shot 1A and shot 12C look like the same film instead of drifting frame to frame. If briefed live, ask about aspect ratio / reference anchor (a film or show that nails the look) / grain intensity the moment color-grade language comes up — don't fold it silently into per-shot prompts.</p>
+        <div class="refgrid">
+          ${refs.map(r=>`<div class="reftile"><div class="sq">▨</div><div class="cap">${r}</div></div>`).join("")}
+        </div>
+        <button class="lockbtn" disabled>Approve Style Lock 🔒</button>
+      </div>
+    </div>`;
+}
+
+function renderGeneratePanel(){
+  const done = scenes.reduce((a,s)=>a+s.shots.filter(sh=>sh[6]).length,0);
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Generate</h2><span class="status-pill ${done?'active':'locked'}">${done} / ${totalShots} shots rendered</span></div>
+      <div class="lockcard">
+        <p>Every shot generates as a still first (Nano Banana / Nano Banana 2), then animates (Omni 1.1 Flash preferred — 7 credits, 4s floor, cheaper and shorter than Veo 3.1 Lite's 10 credits/10s floor). Every generation runs longer than the shot actually needs — trim to the real cut length with ffmpeg before wiring it in here, never ship the raw floor-length clip.</p>
+        <div class="progressrow">
+          <div class="progresstrack"><div class="progressfill" style="width:${totalShots?Math.round(done/totalShots*100):0}%"></div></div>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-faint);">${done} / ${totalShots}</span>
+        </div>
+        <div class="queue">
+          ${scenes.flatMap((scene,si)=>scene.shots.map((sh,i)=>`<div class="qrow"><span>${scene.num}${String.fromCharCode(65+i)} — ${sh[3].slice(0,40)}${sh[3].length>40?'…':''}</span><span>${sh[6]?'video ✓':(sh[5]?'still only':'queued')}</span></div>`)).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDeliverPanel(){
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Deliver</h2><span class="status-pill locked">Blocked on Generate completing</span></div>
+      <div class="lockcard">
+        <p>The client sees this same board with the working chrome stripped — no lock buttons, no pipeline tracker, just the scenes and finished frames. A shareable link, not a separate export step, unless the client needs a downloadable file too.</p>
+        <button class="lockbtn" disabled>Copy Client Link 🔒</button>
+      </div>
+    </div>`;
+}
+
+function renderAll(){
+  renderPipeline();
+  const panels = [renderTranscriptPanel, renderShotListPanel, renderStyleLockPanel, renderGeneratePanel, renderDeliverPanel];
+  document.getElementById("panel-root").innerHTML = panels[selected]();
+}
+
+renderAll();
+</script>
