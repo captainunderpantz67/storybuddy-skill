@@ -5,8 +5,10 @@ description: Turn a live talk-through or a concepting-call transcript into a cli
 
 # StoryBuddy
 
-Built the first time on the Sacramento spot session, 2026-09-25. That session is
-the source of every gotcha below — read them, they cost real time to learn once.
+Built the first time on the Sacramento spot session, 2026-09-25, and extended
+on 2026-09-29 across a real multi-day gap and three more scenes. Both sessions
+are the source of every gotcha below — read them, they cost real time to learn
+once.
 
 ## The actual differentiator — read this first
 
@@ -34,6 +36,24 @@ video, the dashboard) is gluing together parts that already exist.
   on a question nobody can answer. The live-session rule does not apply here.
 
 ## Pipeline stages
+
+### 0. Picking back up after a gap — what actually persists
+
+**Local scratchpad files do not survive a session gap. The published Artifact
+and each tool's own project/media library do.** Confirmed directly: a 4-day
+gap between sessions wiped every local file from the first session — the
+board's HTML, every downloaded still/video, all of it gone. What survived
+intact: the live Artifact itself (read it back with `action: read` to recover
+the full HTML, including every shot's data array) and Google Flow's own
+project (every still and video generated there was still sitting in its media
+library, searchable and reusable as a reference exactly as before). Individual
+uploaded assets are recoverable too, one at a time, via `action: read_asset`
+with the artifact's URL and the asset's blob id from the shot data.
+
+Practical result: never assume a local file will be there next session. If
+resuming a project, first re-read the live Artifact to rebuild local state,
+and treat the generation tool's own project as the character/asset library —
+not a local Downloads folder.
 
 ### 1. Capture the brief
 
@@ -85,6 +105,17 @@ shot. If time pressure means skipping the real reference-image pass, ship the
 result labeled "prompt-only consistency, not locked" on the board (see the
 banner pattern in the template) rather than presenting it as final.
 
+**Confirmed working, 2026-09-29, across 4 characters and 3 scenes:** attach an
+existing still (hover it → "Add to prompt", or the `+` → search existing
+media) alongside a text prompt describing the *new* pose/setting, and the
+model carries the subject's face/build forward reliably — even into a wholly
+different location and framing. This is now the default move for any
+recurring character, not an unproven idea: every character reused this way
+(chief across 3 scenes, chef/mayor/soccer player across 2) held a consistent
+likeness. One real limitation: this only works for a still that already lives
+in the *current* generation tool's project — see the note on cross-tool
+characters below.
+
 Ask (live sessions only, see above): aspect ratio, a specific film/show to
 anchor the look to (much stronger than a text description alone), grain
 intensity, any brand colors that must survive the grade untouched.
@@ -106,6 +137,17 @@ Mechanics, Google Flow specifically:
   composer from a stray click — check for it (a small thumbnail chip above
   the text box) and remove it via its own X button before submitting, or it
   contaminates the generation.
+- **A character generated in a different tool (e.g. the Gemini app) cannot be
+  imported into a Flow project via automation.** Flow's "Upload media" button
+  opens a native OS file picker — invisible to and undrivable by
+  screenshot-based browser automation. Confirmed dead end, no workaround
+  found. If a character's reference still needs to exist in Flow for later
+  image-conditioning, **generate it natively inside that Flow project from
+  the start** — don't generate it in the Gemini app "just to test" and plan
+  to bring it over later. If you're stuck with an out-of-project original,
+  the fallback is a detailed text description of the subject's appearance
+  instead of an image reference — weaker consistency, but it still produces
+  a usable result.
 
 ### 5. Animate — turn a still into video
 
@@ -142,7 +184,14 @@ Mechanics:
    state for 10-30+ seconds beyond the initial render — this is normal, not
    a failure; use the wait productively by starting the *next* shot's still
    generation in parallel rather than blocking on one at a time.
-6. Downloads a `.zip` containing one `.mp4` (not a direct file) — unzip it
+6. **A generation can silently stall** — stuck on "Show thinking" with no
+   cost-confirmation prompt and no error, well past the normal ~15-20s
+   pattern. Confirmed: reloading the page does *not* clear it (the same
+   stuck state persists after reload). What works: send a new message
+   explicitly asking it to retry ("that last request seems stuck, please
+   retry: ...") — this reliably un-sticks it. Don't wait indefinitely past
+   ~30s with no prompt, and don't bother reloading first.
+7. Downloads a `.zip` containing one `.mp4` (not a direct file) — unzip it
    before use.
 
 ### 6. Trim to the real spec
@@ -161,6 +210,17 @@ trim_clip.sh trim raw_clip.mp4 final_2.2s.mp4 2.2
 
 Re-encodes (not stream-copy) so the cut lands frame-accurate rather than
 snapping to the nearest keyframe.
+
+**A prompt's timing language is not a guarantee of the output's actual
+timing — always verify against the real arc, never assume.** Confirmed the
+hard way: a prompt asked for a beat change "partway through" / "halfway
+through" a 4s clip; the model actually placed it around the 75-85% mark, not
+50%. Building the contact sheet caught this before trimming — a front-loaded
+or naively-centered trim would have cut the beat entirely. When a shot has a
+specific beat (not just uniform continuous motion), find that beat's real
+timestamp in the contact sheet first, then choose `start_offset` so the beat
+lands where the shot actually needs it inside the trimmed duration — don't
+back-calculate from where the prompt *said* it should be.
 
 ### 7. Wire into the dashboard
 
@@ -212,8 +272,13 @@ priority rendering, and pipeline tracker are all already solved there).
   consumer-tier scripted path yet for this cost profile. If that changes,
   revisit — a scripted pipeline would remove the browser-automation gotchas
   in stage 4-5 entirely.
-- Style Lock's real reference-image-conditioning mode has been described but
-  not yet actually run end-to-end — the Sacramento session shipped with
-  prompt-only consistency instead. First real run of this skill should try
-  the full reference-conditioned Style Lock and update this doc with what
-  actually happens.
+- No cross-tool character import — a character's reference still has to be
+  generated in the same Flow project it'll be reused in (see the native
+  file-picker dead end above). No workaround found yet; worth revisiting if
+  Flow ever adds a URL-based or drag-and-drop import path that automation
+  can drive.
+- Multi-scene continuity beyond a single Flow project hasn't been tested —
+  everything so far has lived in one project across one multi-day gap. Test
+  whether reference-conditioning still works when a character needs to
+  migrate to a *second* Flow project (e.g., a sequel spot, or hitting a
+  per-project limit) before assuming it does.
