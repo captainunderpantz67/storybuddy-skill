@@ -1,0 +1,487 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shot Board — Sacramento Spot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0a0c0f;
+    --bg-raised:#12151b;
+    --surface:#171b21;
+    --surface-2:#1f242c;
+    --border:#2a2f38;
+    --border-soft:#20242c;
+    --text:#e7e9ec;
+    --text-dim:#8d94a1;
+    --text-faint:#5b616c;
+    --accent:#e8862a;
+    --accent-soft:rgba(232,134,42,0.14);
+    --accent-cool:#3fa9a4;
+    --accent-cool-soft:rgba(63,169,164,0.14);
+    --radius:10px;
+    background:var(--bg);
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
+
+  h1,h2,.display{ font-family:'Bebas Neue',system-ui,sans-serif; letter-spacing:0.02em; }
+
+  /* ---------- header ---------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 6px;
+  }
+  h1.project{
+    font-size:clamp(30px,5vw,46px);
+    margin:0 0 4px; color:var(--text); text-wrap:balance;
+  }
+  .subline{ color:var(--text-dim); font-size:14px; margin:0 0 20px; }
+
+  .banner{
+    display:flex; gap:10px; align-items:flex-start;
+    background:var(--accent-soft); border:1px solid rgba(232,134,42,0.35);
+    border-radius:var(--radius); padding:12px 14px; margin-bottom:24px;
+    font-size:13px; line-height:1.5; color:var(--text);
+  }
+  .banner b{ color:var(--accent); font-family:'IBM Plex Mono',monospace; letter-spacing:0.03em; }
+
+  /* ---------- pipeline tracker ---------- */
+  .pipeline{
+    display:flex; gap:0; margin-bottom:26px; overflow-x:auto;
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+  }
+  .stage{
+    flex:1 1 0; min-width:130px; padding:12px 14px; position:relative;
+    border-right:1px solid var(--border); cursor:pointer;
+    background:none; text-align:left; font-family:inherit; color:inherit;
+    border-top:none; border-left:none; border-bottom:none;
+    transition:background 0.12s ease;
+  }
+  .stage:last-child{ border-right:none; }
+  .stage:hover{ background:var(--surface-2); }
+  .stage .n{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-faint);
+  }
+  .stage .label{ font-size:13px; font-weight:500; margin-top:3px; }
+  .stage.done .n::before{ content:"✓ "; color:var(--accent-cool); }
+  .stage.pending .label{ color:var(--text-faint); }
+  .stage.selected{ background:var(--accent-soft); box-shadow:inset 0 -2px 0 var(--accent); }
+  .stage.selected .label{ color:var(--accent); }
+  .stage.selected .n{ color:var(--accent); }
+
+  .panel{ animation:fade 0.15s ease; }
+  @keyframes fade{ from{ opacity:0.4; } to{ opacity:1; } }
+  .panel-head{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .panel-head h2{ font-size:24px; margin:0; }
+  .status-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px;
+    border-radius:999px; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .status-pill.ok{ background:rgba(63,169,164,0.15); color:var(--accent-cool); }
+  .status-pill.locked{ background:var(--surface-2); color:var(--text-faint); border:1px solid var(--border); }
+  .status-pill.active{ background:var(--accent-soft); color:var(--accent); }
+  .lockcard{
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-raised);
+    padding:22px; display:flex; flex-direction:column; gap:14px;
+  }
+  .lockcard p{ color:var(--text-dim); font-size:13.5px; line-height:1.6; margin:0; max-width:60ch; }
+  .lookbrief{
+    border-left:3px solid var(--accent-cool); padding:2px 0 2px 14px;
+    font-size:13.5px; line-height:1.65; color:var(--text); max-width:65ch;
+  }
+  .lookbrief b{ color:var(--accent-cool); }
+  .lockbtn{
+    align-self:flex-start; font-family:'IBM Plex Mono',monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.06em; padding:10px 18px;
+    border-radius:7px; border:1px solid var(--border); background:transparent;
+    color:var(--text-faint); cursor:not-allowed;
+  }
+  .refgrid{ display:flex; gap:14px; flex-wrap:wrap; }
+  .reftile{
+    width:130px; display:flex; flex-direction:column; gap:6px;
+  }
+  .reftile .sq{
+    aspect-ratio:1; border-radius:8px; border:1px dashed var(--border);
+    background:repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--bg-raised) 10px 20px);
+    display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:18px;
+  }
+  .reftile .cap{ font-size:11px; color:var(--text-dim); text-align:center; }
+  .transcript-box{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.7; color:var(--text-dim);
+    background:var(--bg-raised); border:1px solid var(--border); border-radius:8px;
+    padding:16px; white-space:pre-wrap; margin:14px 0;
+  }
+  .transcript-box .who{ color:var(--accent-cool); }
+  textarea.paste{
+    width:100%; min-height:90px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:8px; color:var(--text-faint); font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px; padding:12px; resize:vertical;
+  }
+  .progressrow{ display:flex; align-items:center; gap:12px; margin:16px 0; }
+  .progresstrack{ flex:1; height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
+  .progressfill{ height:100%; width:0%; background:var(--accent); }
+  .queue{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .qrow{
+    display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--text-faint); padding:8px 12px; background:var(--bg-raised);
+    border:1px solid var(--border); border-radius:6px;
+  }
+
+  /* ---------- stat tiles ---------- */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--border); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; margin-bottom:32px;
+  }
+  .stat{ background:var(--surface); padding:16px 18px; }
+  .stat .v{
+    font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500;
+    font-variant-numeric:tabular-nums; color:var(--text);
+  }
+  .stat .k{ font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
+
+  /* ---------- scene sections ---------- */
+  details.scene{
+    border:1px solid var(--border); border-radius:var(--radius);
+    background:var(--bg-raised); margin-bottom:16px; overflow:hidden;
+  }
+  details.scene[open] summary{ border-bottom:1px solid var(--border); }
+  summary{
+    list-style:none; cursor:pointer; padding:14px 18px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:var(--surface);
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary .chev{
+    font-family:'IBM Plex Mono',monospace; color:var(--text-faint); font-size:12px;
+    transition:transform 0.15s ease; margin-left:auto;
+  }
+  details[open] summary .chev{ transform:rotate(90deg); }
+  .scene-num{
+    font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent);
+    min-width:52px;
+  }
+  .scene-title{ flex:1 1 260px; }
+  .scene-title .slug{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .scene-title .name{ font-size:16px; font-weight:500; margin-top:2px; }
+  .scene-meta{ display:flex; gap:8px; }
+  .pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:4px 9px;
+    border-radius:999px; border:1px solid var(--border); color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .pill.heavy{ border-color:rgba(232,134,42,0.4); color:var(--accent); }
+
+  .strip{
+    display:flex; gap:14px; padding:18px; overflow-x:auto;
+    background:repeating-linear-gradient(
+      90deg, var(--bg-raised) 0 22px, var(--border-soft) 22px 24px
+    );
+    background-position:0 0, 0 100%;
+    background-size:100% 6px;
+    background-repeat:repeat-x;
+    position:relative;
+  }
+  .strip::before, .strip::after{
+    content:""; position:absolute; left:0; right:0; height:6px;
+    background:repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 16px);
+    opacity:0.6;
+  }
+  .strip::before{ top:0; }
+  .strip::after{ bottom:0; }
+
+  .card{
+    flex:0 0 190px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .frame{
+    aspect-ratio:16/9; background:
+      repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--bg-raised) 10px 20px);
+    border-bottom:1px dashed var(--border);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    overflow:hidden; position:relative;
+  }
+  .frame img, .frame video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .frame .glyph{ font-size:20px; color:var(--text-faint); }
+  .frame .await{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--text-faint);
+  }
+  .frame .gentag{
+    position:absolute; top:6px; left:6px; font-family:'IBM Plex Mono',monospace;
+    font-size:8.5px; letter-spacing:0.08em; text-transform:uppercase;
+    background:rgba(10,12,15,0.72); color:var(--accent-cool); padding:2px 6px; border-radius:4px;
+  }
+  .card-body{ padding:10px 11px 12px; display:flex; flex-direction:column; gap:7px; }
+  .shot-id{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .shot-id .dur{ color:var(--text-dim); font-size:11px; }
+  .shot-id .frames{ color:var(--text-faint); font-size:9.5px; display:block; text-align:right; }
+  .badges{ display:flex; gap:5px; flex-wrap:wrap; }
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 6px;
+    border-radius:4px; letter-spacing:0.03em;
+  }
+  .badge.size{ background:var(--surface-2); color:var(--text-dim); border:1px solid var(--border); }
+  .badge.move{ background:var(--accent-cool-soft); color:var(--accent-cool); }
+  .action{ font-size:12.5px; line-height:1.4; color:var(--text); }
+  .vo{ font-size:11.5px; line-height:1.4; color:var(--accent-cool); font-style:italic; }
+  .genbtn{
+    margin-top:auto; font-family:'IBM Plex Mono',monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.08em; text-align:center;
+    padding:7px; border-radius:6px; border:1px solid var(--border);
+    color:var(--text-faint); background:transparent; cursor:not-allowed;
+  }
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap; font-size:12px; color:var(--text-dim);
+    margin:28px 0 8px; padding-top:18px; border-top:1px solid var(--border);
+  }
+  .legend b{ color:var(--text); }
+  .legend .lg-item{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  @media (max-width:640px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    .stage{ min-width:110px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="eyebrow">Storyboard Pipeline</p>
+  <h1 class="project">Sacramento Spot — Shot Board</h1>
+  <p class="subline">4 scenes, 16 shots, all video. Chef/Chief/Mayor are generic stand-ins, not attempts at real likeness.</p>
+
+  <div class="pipeline" id="pipeline"></div>
+  <div class="stats" id="stats"></div>
+
+  <div id="panel-root"></div>
+
+  <div class="legend">
+    <span><b>Reading a card:</b></span>
+    <span class="lg-item"><span class="badge size" style="padding:2px 6px;">MS</span> shot size</span>
+    <span class="lg-item"><span class="badge move" style="padding:2px 6px;">PUSH‑IN</span> camera move</span>
+    <span class="lg-item"><span class="swatch" style="background:var(--accent);"></span> shot number / duration</span>
+    <span class="lg-item"><span class="swatch" style="background:var(--surface-2); border:1px dashed var(--border);"></span> pending frame — fills in place once generated</span>
+  </div>
+</div>
+
+<script>
+const FPS = 24;
+
+const stages = [
+  { label:"Master Script", state:"pending" },
+  { label:"Shot List", state:"done" },
+  { label:"Style Lock", state:"done" },
+  { label:"Final Scratch Proof", state:"current" },
+];
+
+const scenes = [
+  { num:1, slug:"EXT. SACRAMENTO LANDMARKS — MONTAGE", real:true, shots:[
+    ["INSERT","Tracking (low)",2.2,"Hip-down crop: pro soccer player dribbles onto the Tower Bridge walkway — 2 dribbles on beat 1, then cut (beat-driven, not clock-driven — confirm against final track tempo). Trimmed to the real 2.2s cut from a 10s raw generation.","FOLEY: ball strikes deck, ASMR-close mic. No score yet.","assets/c871d3a54c85855ac6b687ac8088e6de.jpg","assets/89e1609c94049549a0fe3fdd819861f3.mp4"],
+    ["MCU","Static / slow push-in",2.3,"Billy Ngo (Kru Contemporary Japanese Cuisine) — cleaver comes down through nori/fish at his counter. Confirmed. Generic stand-in shown below, not an actual likeness. Trimmed to the real 2.3s cut from a 4s raw generation.","FOLEY: cleaver strike on board, seaweed sheet crinkle. ASMR continues.","assets/17a8ee41bec3b2482581f85086677de7.jpg","assets/786e838ba9be67012a3e311f2df8c5ff.mp4"],
+    ["MS","Static / slight push-in",2.2,"Police Chief Zachary Bales steps out of a marked cruiser at the Old Sacramento waterfront (Delta King riverboat backdrop). Confirmed location and cast — staying on as chief per Sam. Generic stand-in shown below, not an actual likeness. Trimmed to the real 2.2s cut from a 4s raw generation.","ASMR Foley ends here. Doc-style interview VO begins — Chief Bales, 8s cue centered in the commercial.","assets/76c765f5d4727107e46aba8aed5da66e.jpg","assets/b187918acaf6e140fbbc5fa18f7b1204.mp4"],
+    ["WS","Static, zoomed out",2.3,"Mayor Kevin McCarty walks down a famous set of large steps — the California State Capitol's front steps, confirmed. Generic stand-in shown below, not an actual likeness. Trimmed to the real 2.3s cut from a 4s raw generation.","Interview VO continues under this shot.","assets/5902876fd6347518263a77f1ac22ab6a.jpg","assets/36bd3fe43742c391a1140d535f79a162.mp4"],
+    ["WS","Drone",2.2,"Aerial over Sacramento — Capitol dome and Tower Bridge both in the skyline at dusk, closes the scene. Trimmed to the real 2.2s cut from a 4s raw generation.","Interview VO resolves — 8s cue likely spans shots 3–5, confirm exact in/out against the final edit.","assets/ddd59d40c13dffc3226b52ed19a80eb6.jpg","assets/60756697223f26c0ad610ffb5849ab18.mp4"],
+  ]},
+  { num:2, slug:"INT. GOVERNMENT OFFICE — DOC-STYLE INTERVIEW", real:true, shots:[
+    ["MS","Static / barely-perceptible push-in","4.0 (TBD, pending script)","⚠ Police Chief Bales, doc-style interview, medium coverage — seated in a grand government office (dark wood paneling, US/CA flags, warm desk lamp). Off-axis framing, never head-on, per doc-interview convention. Office read as \"Capitol building style\" — grand government interior, not literally filmed inside the real Capitol. Confirm. Generic stand-in, same likeness as Scene 1 (reference-image conditioned, not text-repeated — first real test of this, held up well). Duration is the raw 4s generation — real cut length depends on the interview line, not yet scripted.","Doc-style interview dialogue — line TBD, pending script.","","assets/2134bd59d23c50a43cafd58af65c6440.mp4"],
+    ["MCU","Static / barely-perceptible push-in","4.0 (TBD, pending script)","Second coverage angle on the same interview — tighter, different angle and scale than the first cut (multi-cam doc coverage: vary scale and angle together, not angle alone). Same office, same likeness, same open questions as shot 2A.","Doc-style interview dialogue — line TBD, pending script.","","assets/8912ab1ada61a5e42566ec69403d2665.mp4"],
+  ]},
+  { num:3, slug:"EXT. SACRAMENTO LANDMARKS — MONTAGE II (SPEAKING)", real:true, shots:[
+    ["WS","Tracking",2.2,"Soccer player continues up the Tower Bridge — now juggling (not dribbling), full body visible, speaking a line from the master script. Same likeness as Scene 1's soccer shot, carried via detailed text description (no Flow-native reference existed for this character — see open items).","Dialogue — line TBD, pending script. Duration fixed at 2.2s per your call, independent of line length.","","assets/14c86346f5f563ebe6ae7bf50b5774ac.mp4"],
+    ["MCU","Static",2.2,"Billy Ngo continues counter work — halfway through this 2.2s cut he sets the utensil down and turns to look directly at camera to deliver a line. Same likeness as Scene 1, reference-image conditioned. Trim placed so the camera-look beat lands at the actual halfway point (the raw generation's beat landed late — verified against the real motion arc, not assumed).","Dialogue — line TBD, pending script.","","assets/5376086431cd857c3dc9c6ae890630f6.mp4"],
+    ["FS","Tracking",2.2,"Police Chief Bales continues down the Old Sacramento boardwalk — full shot (head to toe, tighter than the soccer player's wide), speaking a line. Same likeness as Scene 1 and Scene 2, reference-image conditioned.","Dialogue — line TBD, pending script.","","assets/43719b5c754c0b05c3f8e082fbe27a1e.mp4"],
+    ["WS","Tracking",2.2,"⚠ Mayor McCarty walks past Golden 1 Center / Downtown Commons (DOCO) plaza — my pick for \"fun, pedestrian, everyone knows it,\" not the Capitol. Confirm or swap. Speaking a line. Same likeness as Scene 1, reference-image conditioned.","Dialogue — line TBD, pending script.","","assets/b19cf8222e613720bae6f0843f88a73d.mp4"],
+  ]},
+  { num:4, slug:"EXT. SACRAMENTO LANDMARKS — MONTAGE III (AERIAL CLOSE / ALL FOUR)", real:true, shots:[
+    ["WS","Drone, aerial",2.2,"Soccer player, aerial follow continuing through downtown Sacramento — closing beat on his thread before the group lands together. Same likeness, reference-image conditioned.","Dialogue/VO — line TBD, pending script.","","assets/83bf79296f5ac6a93cc3967499b0d276.mp4"],
+    ["WS","Drone, aerial",2.2,"Billy Ngo, aerial pass over his restaurant exterior — closing beat on his thread. Generic stand-in, same likeness carried from Scenes 1 &amp; 3.","Dialogue/VO — line TBD, pending script.","","assets/5e59c27dde6e2fe419a412eba81d19ee.mp4"],
+    ["WS","Drone, aerial",2.2,"Chief Bales, aerial pass over the Old Sacramento waterfront — closing beat on his thread. Generic stand-in, same likeness carried from Scenes 1–3.","Dialogue/VO — line TBD, pending script.","","assets/6e5ddc03be9cfcfac313667b537fbdbb.mp4"],
+    ["WS","Drone, aerial",2.2,"Mayor McCarty, aerial pass over the Capitol grounds — closing beat on his thread. Generic stand-in, same likeness carried from Scenes 1 &amp; 3.","Dialogue/VO — line TBD, pending script.","","assets/c6ad08d2799de4ca5aba6e990d50abdf.mp4"],
+    ["MS","Static, group",2.5,"⚠ All four leads together in one frame for the closing line — built via iterative 2-image reference chaining (soccer+chef → +chief → +mayor), the first time this board has composited more than 2 reference characters into one shot. Placeholder duration of 2.5s; no explicit length given yet for the closing beat, confirm against the final line read.","Closing line — \"We are Sacramento.\" Exact line/timing TBD, pending script.","","assets/229fb12b99fd7bf8d639887d7b850d08.mp4"],
+  ]},
+];
+
+function fmtDur(d){ return (typeof d === "string" ? d : d.toFixed(1)) + "s"; }
+function frames(d){ const n = typeof d === "string" ? parseFloat(d) : d; return Math.round(n*FPS)+"f"; }
+
+const totalShots = scenes.reduce((a,s)=>a+s.shots.length,0);
+const totalSeconds = scenes.reduce((a,s)=>a+s.shots.reduce((b,sh)=>b+(typeof sh[2]==="string"?parseFloat(sh[2]):sh[2]),0),0);
+const avg = totalSeconds/totalShots;
+
+document.getElementById("stats").innerHTML = `
+  <div class="stat"><div class="v">${scenes.length}</div><div class="k">Scenes</div></div>
+  <div class="stat"><div class="v">${totalShots}</div><div class="k">Total Shots</div></div>
+  <div class="stat"><div class="v">${totalSeconds.toFixed(1)}s</div><div class="k">Est. Runtime</div></div>
+  <div class="stat"><div class="v">${avg.toFixed(2)}s</div><div class="k">Avg Shot Length</div></div>
+`;
+
+let selected = 1; // Shot List open by default
+
+function renderPipeline(){
+  document.getElementById("pipeline").innerHTML = stages.map((s,i)=>
+    `<button class="stage ${s.state} ${i===selected?'selected':''}" data-i="${i}">
+       <div class="n">${String(i+1).padStart(2,"0")}</div><div class="label">${s.label}</div>
+     </button>`
+  ).join("");
+  document.querySelectorAll(".stage").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ selected = parseInt(btn.dataset.i,10); renderAll(); });
+  });
+}
+
+function renderMasterScriptPanel(){
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Master Script</h2><span class="status-pill locked">Not yet written</span></div>
+      <div class="lockcard">
+        <p>Every shot's dialogue above is marked "line TBD, pending script" for a reason — the actual script lands here once it's written. Durations already locked (2.2s, 2.5s, etc.) hold regardless of line length; interview-coverage shots in Scene 2 are the exception and will re-cut once their lines exist.</p>
+        <textarea class="paste" placeholder="Paste the master script here once it's written."></textarea>
+      </div>
+    </div>`;
+}
+
+function renderShotListPanel(){
+  return `<div class="panel"><div class="panel-head"><h2>Shot List</h2><span class="status-pill active">Reviewing — checkpoint 1</span></div>${scenes.map(scene => {
+  const dur = scene.shots.reduce((a,sh)=>a+(typeof sh[2]==="string"?parseFloat(sh[2]):sh[2]),0);
+  const cards = scene.shots.map((sh,i)=>{
+    const [size, move, d, action, audio, img, video] = sh;
+    return `
+      <div class="card">
+        <div class="frame">
+          ${video
+            ? `<video src="${video}" autoplay loop muted playsinline></video><span class="gentag">Video</span>`
+            : img
+            ? `<img src="${img}" alt="Generated still — shot ${scene.num}${String.fromCharCode(65+i)}"><span class="gentag">First look</span>`
+            : `<span class="glyph">▭</span><span class="await">Awaiting Generation</span>`}
+        </div>
+        <div class="card-body">
+          <div class="shot-id">
+            <span>${scene.num}${String.fromCharCode(65+i)}</span>
+            <span class="dur">${fmtDur(d)}<span class="frames">${frames(d)}</span></span>
+          </div>
+          <div class="badges">
+            <span class="badge size">${size}</span>
+            <span class="badge move">${move}</span>
+          </div>
+          <div class="action">${action}</div>
+          ${audio ? `<div class="vo">${audio}</div>` : ``}
+          <button class="genbtn" ${img||video?'':'disabled'} title="${img||video?'Regenerate this shot':'Locked until style reference is approved'}">${img||video?'Regenerate ↻':'Generate ↦'}</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <details class="scene" open>
+      <summary>
+        <div class="scene-num">${String(scene.num).padStart(2,"0")}</div>
+        <div class="scene-title">
+          <div class="slug">${scene.slug}</div>
+          <div class="name">${scene.shots.length} shots planned</div>
+        </div>
+        <div class="scene-meta">
+          <span class="pill">${dur.toFixed(1)}s est.</span>
+          <span class="pill ${scene.real?"heavy":""}">${scene.real ? "real — from talk-through" : "sample"}</span>
+        </div>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="strip">${cards}</div>
+    </details>`;
+}).join("")}</div>`;
+}
+
+function renderStyleLockPanel(){
+  const refs = [
+    { img:"assets/c871d3a54c85855ac6b687ac8088e6de.jpg", cap:"Soccer — Tower Bridge" },
+    { img:"assets/17a8ee41bec3b2482581f85086677de7.jpg", cap:"Chef — counter work" },
+    { img:"assets/76c765f5d4727107e46aba8aed5da66e.jpg", cap:"Chief — exiting cruiser" },
+    { img:"assets/5902876fd6347518263a77f1ac22ab6a.jpg", cap:"Mayor — Capitol steps" },
+  ];
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Style Lock</h2><span class="status-pill ok">Locked — carried via reference-image conditioning</span></div>
+      <div class="lockcard">
+        <p>Every recurring character generates against one of these approved stills, not a repeated text description — that's what's held the look together shot to shot since Scene 2. True log/graded before-after image pairs are still in progress (not worth the extra render spend to finish today); the grade spec below is the written anchor every shot is held to in the meantime.</p>
+        <div class="refgrid">
+          ${refs.map(r=>`<div class="reftile"><div class="sq" style="background:none;"><img src="${r.img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"></div><div class="cap">${r.cap}</div></div>`).join("")}
+        </div>
+        <div class="lookbrief">
+          <b>Grade philosophy — </b>log-leaning capture, graded flatter than a standard Rec.709 pop: gentle highlight rolloff (nothing clips hot), rich deep saturation concentrated in shadows and skin tones rather than across the whole frame, subtle film grain over a clean digital base. Grounded, documentary-prestige look — anchored to <i>Sons of Anarchy</i> and moody-California reference footage, not a commercial-bright grade. Applies uniformly across day-exterior montage shots and the interior interview coverage alike.
+        </div>
+        <button class="lockbtn" disabled>Style Lock Approved 🔒</button>
+      </div>
+    </div>`;
+}
+
+const allClips = scenes.flatMap(scene => scene.shots.map((sh,i) => ({
+  id: `${scene.num}${String.fromCharCode(65+i)}`,
+  action: sh[3],
+  video: sh[6],
+})));
+
+function renderScratchProofPanel(){
+  const playable = allClips.filter(c=>c.video);
+  return `
+    <div class="panel">
+      <div class="panel-head"><h2>Final Scratch Proof</h2><span class="status-pill ok">${playable.length} / ${totalShots} clips wired, playing in cut order</span></div>
+      <div class="lockcard">
+        <p>Every generated clip, back to back in shot order, scene 1 through 4 — this is the rough assembly, not the final cut. No score, no transitions, dialogue lines all still TBD pending the master script above.</p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:640px;">
+          <div class="frame" style="aspect-ratio:16/9; width:100%;">
+            <video id="scratchplayer" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+          </div>
+          <div class="shot-id"><span id="scratchlabel">—</span><span class="dur" id="scratchaction" style="font-family:'IBM Plex Sans',sans-serif; color:var(--text-dim); text-align:right; max-width:70%;"></span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function wireScratchProof(){
+  const playable = allClips.filter(c=>c.video);
+  const player = document.getElementById("scratchplayer");
+  if(!player || !playable.length) return;
+  let i = 0;
+  function play(){
+    const clip = playable[i];
+    player.src = clip.video;
+    document.getElementById("scratchlabel").textContent = clip.id;
+    document.getElementById("scratchaction").textContent = clip.action;
+    player.play();
+  }
+  player.addEventListener("ended", ()=>{ i = (i+1) % playable.length; play(); });
+  play();
+}
+
+function renderAll(){
+  renderPipeline();
+  const panels = [renderMasterScriptPanel, renderShotListPanel, renderStyleLockPanel, renderScratchProofPanel];
+  document.getElementById("panel-root").innerHTML = panels[selected]();
+  if(selected === 3) wireScratchProof();
+}
+
+renderAll();
+</script>
+</body>
+</html>
